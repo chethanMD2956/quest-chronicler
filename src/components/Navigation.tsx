@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   MapPin, 
   User, 
@@ -8,16 +9,22 @@ import {
   Menu, 
   X,
   PenTool,
-  Home
+  Home,
+  LogIn
 } from 'lucide-react';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  // This will be replaced with actual auth state from Supabase
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState({ name: 'John Doe' });
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -38,7 +45,7 @@ const Navigation = () => {
             <span>Home</span>
           </Link>
           
-          {isAuthenticated && (
+          {user && (
             <>
               <Link 
                 to="/dashboard" 
@@ -59,24 +66,24 @@ const Navigation = () => {
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center space-x-3">
-          {isAuthenticated ? (
+          {user ? (
             <div className="flex items-center space-x-3">
               <span className="text-sm text-muted-foreground">
-                Welcome, {user.name}
+                Welcome back!
               </span>
-              <Button variant="ghost" size="sm" onClick={() => setIsAuthenticated(false)}>
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
             </div>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsAuthenticated(true)}>
-                Login
-              </Button>
-              <Button variant="default" size="sm" onClick={() => setIsAuthenticated(true)}>
-                Sign Up
-              </Button>
+              <Link to="/auth">
+                <Button variant="hero" size="sm">
+                  <LogIn className="h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
             </div>
           )}
         </div>
@@ -105,7 +112,7 @@ const Navigation = () => {
               <span>Home</span>
             </Link>
             
-            {isAuthenticated ? (
+            {user ? (
               <>
                 <Link 
                   to="/dashboard" 
@@ -126,17 +133,11 @@ const Navigation = () => {
                   </Button>
                 </Link>
                 <div className="pt-2 border-t">
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Welcome, {user.name}
-                  </p>
                   <Button 
                     variant="ghost" 
                     size="sm" 
                     className="w-full justify-start"
-                    onClick={() => {
-                      setIsAuthenticated(false);
-                      setIsMenuOpen(false);
-                    }}
+                    onClick={handleSignOut}
                   >
                     <LogOut className="h-4 w-4" />
                     Logout
@@ -145,28 +146,16 @@ const Navigation = () => {
               </>
             ) : (
               <div className="space-y-2 pt-2 border-t">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setIsAuthenticated(true);
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Login
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setIsAuthenticated(true);
-                    setIsMenuOpen(false);
-                  }}
-                >
-                  Sign Up
-                </Button>
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Button 
+                    variant="hero" 
+                    size="sm" 
+                    className="w-full justify-start"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </Button>
+                </Link>
               </div>
             )}
           </div>

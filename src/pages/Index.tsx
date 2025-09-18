@@ -1,66 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import BlogCard from '@/components/BlogCard';
 import SearchBar from '@/components/SearchBar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useBlogs } from '@/hooks/useBlogs';
+import { useAuth } from '@/contexts/AuthContext';
 import { MapPin, Compass, TrendingUp } from 'lucide-react';
 import heroImage from '@/assets/hero-travel.jpg';
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // Mock blog data - will be replaced with Supabase data
-  const [blogs] = useState([
-    {
-      id: '1',
-      title: 'Adventures in the Swiss Alps',
-      content: 'Exploring the breathtaking mountain landscapes and charming villages of Switzerland. From hiking through pristine trails to enjoying local cuisine, every moment was magical.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-15',
-      destination: 'Switzerland',
-      user: {
-        name: 'John Doe',
-        email: 'john@example.com'
-      }
-    },
-    {
-      id: '2',
-      title: 'Sunset in Santorini',
-      content: 'Witnessing the most spectacular sunsets from the white-washed buildings of Santorini. The blue domed churches and endless Aegean Sea create an unforgettable experience.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-10',
-      destination: 'Greece',
-      user: {
-        name: 'John Doe',
-        email: 'john@example.com'
-      }
-    },
-    {
-      id: '3',
-      title: 'Northern Lights in Iceland',
-      content: 'Chasing the aurora borealis across the dramatic landscapes of Iceland. Geysers, waterfalls, and the mystical dancing lights in the sky made this trip unforgettable.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-05',
-      destination: 'Iceland',
-      user: {
-        name: 'Jane Smith',
-        email: 'jane@example.com'
-      }
-    },
-    {
-      id: '4',
-      title: 'Temples of Kyoto',
-      content: 'Discovering the ancient temples and traditional gardens of Kyoto. From early morning temple visits to evening walks through the bamboo forest.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-01',
-      destination: 'Japan',
-      user: {
-        name: 'Mike Johnson',
-        email: 'mike@example.com'
-      }
-    }
-  ]);
+  const { blogs, loading } = useBlogs();
+  const { user } = useAuth();
 
   const [featuredDestinations] = useState([
     'Switzerland',
@@ -72,12 +25,16 @@ const Index = () => {
   ]);
 
   // Filter blogs based on search query
-  const filteredBlogs = blogs.filter(blog =>
-    blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.destination?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    blog.user.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredBlogs = useMemo(() => {
+    if (!searchQuery) return blogs;
+    
+    return blogs.filter(blog =>
+      blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.destination?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      blog.profiles?.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [blogs, searchQuery]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -124,10 +81,21 @@ const Index = () => {
               <Compass className="h-5 w-5" />
               Explore Stories
             </Button>
-            <Button variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
-              <MapPin className="h-5 w-5" />
-              Share Your Journey
-            </Button>
+            {user ? (
+              <Link to="/create">
+                <Button variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <MapPin className="h-5 w-5" />
+                  Share Your Journey
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button variant="outline" size="lg" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
+                  <MapPin className="h-5 w-5" />
+                  Join Community
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </section>
@@ -175,10 +143,17 @@ const Index = () => {
             )}
           </div>
 
-          {filteredBlogs.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading amazing travel stories...</p>
+            </div>
+          ) : filteredBlogs.length === 0 ? (
             <div className="text-center py-16">
               <MapPin className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No stories found</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                {searchQuery ? 'No stories found' : 'No travel stories yet'}
+              </h3>
               <p className="text-muted-foreground mb-6">
                 {searchQuery 
                   ? "Try adjusting your search terms or browse all stories"
@@ -194,7 +169,21 @@ const Index = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredBlogs.map((blog) => (
-                <BlogCard key={blog.id} blog={blog} />
+                <BlogCard
+                  key={blog.id}
+                  blog={{
+                    id: blog.id,
+                    title: blog.title,
+                    content: blog.content,
+                    image_url: blog.image_url,
+                    created_at: blog.created_at,
+                    destination: blog.destination,
+                    user: {
+                      name: blog.profiles?.name || 'Anonymous',
+                      email: blog.profiles?.email || ''
+                    }
+                  }}
+                />
               ))}
             </div>
           )}

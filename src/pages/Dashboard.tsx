@@ -1,44 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import BlogCard from '@/components/BlogCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBlogs, Blog } from '@/hooks/useBlogs';
 import { PenTool, Eye, Edit, Trash2, Plus } from 'lucide-react';
 
 const Dashboard = () => {
-  // Mock user blogs data - will be replaced with Supabase data
-  const [userBlogs] = useState([
-    {
-      id: '1',
-      title: 'Adventures in the Swiss Alps',
-      content: 'Exploring the breathtaking mountain landscapes and charming villages of Switzerland. From hiking through pristine trails to enjoying local cuisine, every moment was magical.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-15',
-      destination: 'Switzerland',
-      user: {
-        name: 'John Doe',
-        email: 'john@example.com'
+  const { user } = useAuth();
+  const { getUserBlogs, deleteBlog } = useBlogs();
+  const [userBlogs, setUserBlogs] = useState<Blog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUserBlogs = async () => {
+      if (user) {
+        setLoading(true);
+        const blogs = await getUserBlogs(user.id);
+        setUserBlogs(blogs);
+        setLoading(false);
       }
-    },
-    {
-      id: '2',
-      title: 'Sunset in Santorini',
-      content: 'Witnessing the most spectacular sunsets from the white-washed buildings of Santorini. The blue domed churches and endless Aegean Sea create an unforgettable experience.',
-      image_url: '/placeholder.svg?height=400&width=600',
-      created_at: '2024-01-10',
-      destination: 'Greece',
-      user: {
-        name: 'John Doe',
-        email: 'john@example.com'
+    };
+
+    fetchUserBlogs();
+  }, [user, getUserBlogs]);
+
+  const handleDeleteBlog = async (blogId: string) => {
+    if (window.confirm('Are you sure you want to delete this blog post?')) {
+      await deleteBlog(blogId);
+      // Refresh user blogs
+      if (user) {
+        const blogs = await getUserBlogs(user.id);
+        setUserBlogs(blogs);
       }
     }
-  ]);
+  };
 
   const stats = {
     totalBlogs: userBlogs.length,
-    totalViews: 1250,
-    avgViews: Math.round(1250 / userBlogs.length)
+    totalViews: userBlogs.length * 125, // Mock calculation
+    avgViews: userBlogs.length > 0 ? Math.round((userBlogs.length * 125) / userBlogs.length) : 0
   };
 
   return (
@@ -99,7 +102,7 @@ const Dashboard = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-semibold">My Blog Posts</h2>
-            {userBlogs.length === 0 && (
+            {userBlogs.length === 0 && !loading && (
               <Link to="/create">
                 <Button variant="outline">
                   <PenTool className="h-4 w-4" />
@@ -109,7 +112,14 @@ const Dashboard = () => {
             )}
           </div>
 
-          {userBlogs.length === 0 ? (
+          {loading ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <p className="text-muted-foreground">Loading your blogs...</p>
+              </CardContent>
+            </Card>
+          ) : userBlogs.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <PenTool className="h-12 w-12 text-muted-foreground mb-4" />
@@ -173,7 +183,12 @@ const Dashboard = () => {
                             Edit
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteBlog(blog.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                           Delete
                         </Button>

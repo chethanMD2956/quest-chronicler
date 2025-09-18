@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,11 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useBlogs } from '@/hooks/useBlogs';
+import { supabase } from '@/integrations/supabase/client';
 import { Save, ArrowLeft, Image, MapPin } from 'lucide-react';
 
 const CreateBlog = () => {
   const navigate = useNavigate();
+  const { id } = useParams(); // For edit mode
   const { toast } = useToast();
+  const { createBlog, updateBlog } = useBlogs();
   
   const [formData, setFormData] = useState({
     title: '',
@@ -21,6 +25,46 @@ const CreateBlog = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const isEdit = Boolean(id);
+
+  // Load blog data for editing
+  useEffect(() => {
+    const loadBlog = async () => {
+      if (id) {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('blogs')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+          if (error) throw error;
+
+          if (data) {
+            setFormData({
+              title: data.title,
+              content: data.content,
+              destination: data.destination || '',
+              image_url: data.image_url || ''
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: "Failed to load blog post.",
+            variant: "destructive"
+          });
+          navigate('/dashboard');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadBlog();
+  }, [id, navigate, toast]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -45,25 +89,40 @@ const CreateBlog = () => {
     setIsSubmitting(true);
 
     try {
-      // This will be replaced with actual Supabase integration
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
-      toast({
-        title: "Blog Created!",
-        description: "Your travel story has been published successfully.",
-      });
+      const blogData = {
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        destination: formData.destination.trim() || undefined,
+        image_url: formData.image_url.trim() || undefined
+      };
+
+      if (isEdit && id) {
+        await updateBlog(id, blogData);
+      } else {
+        await createBlog(blogData);
+      }
       
       navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create blog post. Please try again.",
-        variant: "destructive"
-      });
+      // Error handling is done in the hooks
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container py-8 max-w-4xl">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading blog post...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,9 +140,14 @@ const CreateBlog = () => {
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Create New Blog Post</h1>
+            <h1 className="text-3xl font-bold">
+              {isEdit ? 'Edit Blog Post' : 'Create New Blog Post'}
+            </h1>
             <p className="text-muted-foreground">
-              Share your travel adventures with the world
+              {isEdit 
+                ? 'Update your travel story' 
+                : 'Share your travel adventures with the world'
+              }
             </p>
           </div>
         </div>
@@ -187,7 +251,10 @@ const CreateBlog = () => {
               className="flex-1 sm:flex-none"
             >
               <Save className="h-4 w-4" />
-              {isSubmitting ? 'Publishing...' : 'Publish Blog'}
+              {isSubmitting 
+                ? (isEdit ? 'Updating...' : 'Publishing...') 
+                : (isEdit ? 'Update Blog' : 'Publish Blog')
+              }
             </Button>
             
             <Button 
