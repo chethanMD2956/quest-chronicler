@@ -2,41 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Travel Blog Design System - All colors MUST be HSL */
 
 @layer base {
   :root {
+    /* Base colors inspired by travel and adventure */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 215 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 215 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 215 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Travel-inspired primary: Ocean blue */
+    --primary: 203 89% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 203 89% 45%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary: Warm sunset orange */
+    --secondary: 25 95% 53%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 25 95% 45%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Accent: Adventure green */
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 142 71% 38%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Neutral tones */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 203 89% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Travel-specific design tokens */
+    --hero-gradient: linear-gradient(135deg, hsl(203 89% 53%), hsl(25 95% 53%));
+    --card-shadow: 0 4px 20px -4px hsl(203 89% 53% / 0.1);
+    --card-shadow-hover: 0 8px 30px -4px hsl(203 89% 53% / 0.2);
+    --text-gradient: linear-gradient(135deg, hsl(203 89% 45%), hsl(142 71% 45%));
+    
+    /* Typography */
+    --font-heading: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +72,38 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    /* Dark mode travel theme */
+    --background: 215 28% 7%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 215 28% 10%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 215 28% 10%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark mode colors maintain travel vibe */
+    --primary: 203 89% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 203 89% 50%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 25 95% 58%;
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 25 95% 50%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 142 71% 50%;
+    --accent-foreground: 0 0% 100%;
+    --accent-hover: 142 71% 42%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --muted: 215 28% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 215 28% 18%;
+    --input: 215 28% 18%;
+    --ring: 203 89% 58%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +122,72 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+@layer components {
+  /* Travel blog specific components */
+  .hero-gradient {
+    background: var(--hero-gradient);
+  }
+
+  .text-gradient {
+    background: var(--text-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .blog-card {
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .blog-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-4px);
+  }
+
+  .prose-travel {
+    @apply max-w-none;
+    line-height: 1.7;
+    font-size: 1.125rem;
+  }
+
+  .prose-travel h1 {
+    @apply text-3xl font-bold mb-6 text-foreground;
+  }
+
+  .prose-travel h2 {
+    @apply text-2xl font-semibold mt-8 mb-4 text-foreground;
+  }
+
+  .prose-travel h3 {
+    @apply text-xl font-semibold mt-6 mb-3 text-foreground;
+  }
+
+  .prose-travel p {
+    @apply mb-4 text-foreground/80 leading-relaxed;
+  }
+
+  .prose-travel a {
+    @apply text-primary hover:text-primary-hover underline;
+  }
+
+  .prose-travel img {
+    @apply rounded-xl shadow-lg;
+  }
+
+  .prose-travel ul, .prose-travel ol {
+    @apply mb-4 ml-6;
+  }
+
+  .prose-travel li {
+    @apply mb-1 text-foreground/80;
   }
 }
